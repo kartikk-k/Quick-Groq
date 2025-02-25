@@ -33,6 +33,12 @@ class ChatManager: ObservableObject {
         }
     }
     
+    func resetMessages(){
+        DispatchQueue.main.async {
+            self.messages.removeAll()
+        }
+    }
+    
     // Function to call Groq API
     private func fetchGroqResponse(userMessage: String) async {
         let url = URL(string: "https://api.groq.com/openai/v1/chat/completions")!

@@ -16,7 +16,7 @@ struct OllamaMacOSApp: App {
         WindowGroup {
             ZStack {
                 ContentView()
-                    .environmentObject(ChatManager())
+                    .environmentObject(chatManager)
                     .ignoresSafeArea()
                     .containerBackground(
                         .ultraThickMaterial, for: .window
@@ -24,6 +24,7 @@ struct OllamaMacOSApp: App {
                 
                 VStack(spacing: 0) {
                     CustomNavBar()
+                        .environmentObject(chatManager)
                     Spacer()
                 }
             }
@@ -78,6 +79,7 @@ struct OllamaMacOSApp: App {
 }
 
 struct CustomNavBar: View {
+    @EnvironmentObject var chatManager: ChatManager
     @State private var showSettings = false // Toggle for settings bar
 
     var body: some View {
@@ -89,7 +91,7 @@ struct CustomNavBar: View {
                     Spacer()
                     
                     Button(action: {
-                        print("New button clicked")
+                        chatManager.resetMessages()
                     }) {
                         Image(systemName: "plus")
                             .font(.system(size: 16))
