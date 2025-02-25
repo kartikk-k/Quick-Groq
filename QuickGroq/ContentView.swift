@@ -8,17 +8,68 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var chatManager: ChatManager // Access shared state
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        VStack{
+            
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(chatManager.messages) { message in
+                            ChatBubble(message: message)
+                                .id(message.id) // Assign an ID to each message
+                        }
+                    }
+                    .padding()
+                    .padding(.top, 46)
+                    .onChange(of: chatManager.messages.count) { _ in
+                        withAnimation {
+                            proxy.scrollTo(chatManager.messages.last?.id, anchor: .bottom)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+
+            InputBar()
+            
         }
-        .padding()
     }
 }
 
+
+struct ChatBubble: View {
+    let message: ChatMessage
+
+    var body: some View {
+        HStack {
+            if message.isUser {
+                Spacer()
+                    Text(message.text)
+                        .padding(10)
+                        .padding(.horizontal, 6)
+                        .background(Color.gray.opacity(0.3))
+                        .foregroundColor(.white)
+                        .cornerRadius(18)
+            } else {
+                VStack{
+                    Text(message.text)
+                        .padding(.vertical, 10)
+                        .cornerRadius(10)
+                    Spacer()
+                }
+                
+            }
+        }
+    }
+}
+
+
 #Preview {
     ContentView()
+        .frame(minWidth: 200)
+        .environmentObject(ChatManager())
 }
+
