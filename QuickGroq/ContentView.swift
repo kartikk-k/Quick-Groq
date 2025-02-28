@@ -47,7 +47,7 @@ struct ChatBubble: View {
         HStack {
             if message.isUser {
                 Spacer()
-                    Text(message.text)
+                    Text(message.formattedText)
                         .padding(10)
                         .padding(.horizontal, 6)
                         .background(Color.gray.opacity(0.3))
@@ -55,7 +55,7 @@ struct ChatBubble: View {
                         .cornerRadius(18)
             } else {
                 VStack{
-                    Text(message.text)
+                    Text(message.formattedText)
                         .padding(.vertical, 10)
                         .cornerRadius(10)
                     Spacer()

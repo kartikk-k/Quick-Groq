@@ -185,4 +185,8 @@ struct ChatMessage: Identifiable {
     var text: String
     let isUser: Bool
     let timestamp: Date
+    
+    var formattedText: LocalizedStringKey {
+        LocalizedStringKey.init(text) // Convert when displaying
+    }
 }
