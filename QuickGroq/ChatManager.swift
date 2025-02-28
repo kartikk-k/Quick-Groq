@@ -19,19 +19,51 @@ class ChatManager: ObservableObject {
 
     
     // Function to add a user message and call Groq API
-    func sendMessage(_ text: String) {
+    func sendMessage(_ text: String, append: Bool = true) {
         // Append user message
         let userMessage = ChatMessage(id: UUID(), text: text, isUser: true, timestamp: Date())
-        DispatchQueue.main.async {
-            self.messages.append(userMessage)
-        }
         
+        if append {
+            DispatchQueue.main.async {
+                self.messages.append(userMessage)
+            }
+        }
         // Call Groq API for response
         Task {
-//            await fetchGroqResponse(userMessage: text)
             await streamGroqResponse(userMessage: text)
         }
     }
+    
+        // Copy selected message to clipboard
+        func copyMessage(_ message: ChatMessage) {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(message.text, forType: .string)
+            print("Copied: \(message.text)")
+        }
+
+        // Regenerate response: Removes bot response and sends the same user message
+        func regenerateMessage(at index: Int) {
+            guard index < messages.count, index > 0 else { return }
+            
+            let userMessage = messages[index - 1] // Get the previous message (should be a user message)
+            if userMessage.isUser {
+                DispatchQueue.main.async {
+                    self.messages.remove(at: index) // Remove the bot response
+                }
+                sendMessage(userMessage.text, append: false) // Re-send the user question
+            }
+        }
+
+        // Delete user + bot message pair
+        func deleteMessagePair(at index: Int) {
+            guard index < messages.count, index > 0 else { return }
+
+            DispatchQueue.main.async {
+                self.messages.remove(at: index) // Remove bot message
+                self.messages.remove(at: index - 1) // Remove associated user message
+            }
+        }
     
     func resetMessages(){
         DispatchQueue.main.async {
@@ -139,6 +171,16 @@ class ChatManager: ObservableObject {
                                            }
                                        }
                                    }
+                                   
+                                   // Mark as completed if `finish_reason` is received
+                                   if chunk.choices.first?.delta.content == nil {
+                                       DispatchQueue.main.async {
+                                           if let lastIndex = self.messages.indices.last {
+                                               self.messages[lastIndex].isCompleted = true
+                                           }
+                                       }
+                                   }
+                                   
                                }
                            } catch {
                                print("Decoding error: \(error)")
@@ -185,6 +227,8 @@ struct ChatMessage: Identifiable {
     var text: String
     let isUser: Bool
     let timestamp: Date
+    
+    var isCompleted: Bool = false
     
     var formattedText: LocalizedStringKey {
         LocalizedStringKey.init(text) // Convert when displaying
